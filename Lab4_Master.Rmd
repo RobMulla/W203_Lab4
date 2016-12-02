@@ -1,0 +1,50 @@
+---
+title: "Lab 4"
+author: "Alex, Jason, and Rob"
+date: "December 2, 2016"
+output: pdf_document
+---
+
+## Lab 4
+
+This will be the document for lab 4
+
+# Setup
+```{r}
+load('bwght_w203.RData')
+```
+
+```{r, echo=TRUE, warning=FALSE}
+#Load Libraries
+library(gridExtra)
+library(ggplot2)
+library(stargazer)
+library(lmtest)
+library(sandwich)
+library(car)
+library(corrplot)
+```
+
+# Introduction
+
+# Exploritory Analysis
+
+# Discussion of Variables and Transformations
+
+## Models
+
+# Model 1
+
+# Model 1 Assumptions
+
+# Model 2
+
+# Model 3
+
+
+# Model Summary (regression table)
+
+
+# Causal Inference
+
+# Conclusion
