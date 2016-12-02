@@ -1,0 +1,14 @@
+---
+title: "Lab 4"
+author: "Alex, Jason, and Rob"
+date: "December 2, 2016"
+output: pdf_document
+---
+
+## Lab 4
+
+This will be the document for lab 4
+
+```{r}
+load('bwght_w203.RData')
+```

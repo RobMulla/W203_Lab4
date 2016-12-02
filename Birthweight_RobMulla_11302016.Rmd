@@ -1,0 +1,231 @@
+---
+title: "Lab 4: Does Prenatal Care Improve Infant Health?"
+author: "w203: Statistics for Data Science"
+
+date: "November 23, 2016"
+output: pdf_document
+---
+
+# Introduction
+
+This is a group lab.  You may work in teams of 2 or 3.
+
+The file bwght\_w203.RData contains data from the National Center for Health Statistics and from birth certificates.  Your team has been hired by a health advocacy group to study this data and help them understand whether prenatal care improves health outcomes for newborn infants.
+
+The file includes a birthweight variable.  Additonally, the one- and five-minute APGAR scores are included.  These are measures of the well being of infants just after birth.
+
+Variable descriptions are provided as follows.
+
+```{r, echo=TRUE, warning=FALSE}
+#Load Libraries
+library(gridExtra)
+library(ggplot2)
+library(stargazer)
+library(lmtest)
+library(sandwich)
+library(car)
+library(corrplot)
+```
+
+```{r}
+# setwd('C:/Users/mullar/Google Drive/Berkeley/W203/Lab_4/')
+# setwd('C:/Users/Rob/Google Drive/Berkeley/W203/Lab_4/')
+setwd('/Users/robmulla/Google Drive/Berkeley/W203/Lab_4')
+getwd()
+load("bwght_w203.RData")
+desc
+```
+
+# Assignment
+
+Prepare a report addressing the question of whether prenatal care improves newborn health outcomes.
+
+A successful submission will include
+
+1. A brief introduction
+
+2. A model building process, supported by exploratory analysis.  Your EDA should be interspersed with, and support, your modeling decisions.  In particular, you should use exploratory techniques to address
+
+## Exploritory Analysis
+
+# Summary
+```{r}
+summary(data)
+```
+
+# Histograms
+```{r}
+qplot(data$mage)
+qplot(data$meduc)
+qplot(data$monpre)
+qplot(data$npvis)
+qplot(data$fage)
+qplot(data$feduc)
+qplot(data$bwght)
+
+qplot(data$omaps)
+qplot(data$fmaps)
+
+qplot(data$cigs)
+
+qplot(data$drink)
+
+qplot(data$lbw)
+qplot(data$vlbw)
+
+colMeans(data)
+
+mean(data$male)
+
+qplot(data$lbwght)
+
+qplot(data$magesq)
+qplot(data$npvissq)
+
+```
+Comments on each variable:
+1     mage - mother's age, years *Fairly normally distributed. don't think we would want to transform*
+
+2     meduc - mother's educ, years *don't think we would want to transform, possibly do the thing where we bin into hs, college, etc. Spikes at 12 and 16 years as expected*
+
+3     monpre       month prenatal care began - *obvious max and min values (0 and ~10 months). Not normally distributed, tail out to the right side. May need to consider bias considering this is survey data*
+
+4     npvis total number of prenatal visits *Somewhat normal looking around 13 visits, however long tail out to the right with very high number of visits*
+
+5      fage             father's age, years - *Fairly normal distribution*
+
+6     feduc            father's educ, years - *similar to mothers age variable, looks like more college grads than mothers*
+
+7     bwght             birth weight, grams - *Very normal looking with the exception of very low values. Will need to explore these low values and how they will impact the model*
+
+8     omaps          one minute apgar score - *peak at 9 trailing off to the left. 1 score of 0, 3 scores of 10*
+
+9     fmaps         five minute apgar score - *Interesting. Many more high numbers 8-10. Nearly none under 5.*
+
+10     cigs          avg cigarettes per day - *We've seen this before in the lab or homework. Possible measurement error due to clustering around 10 and 20 cigs*
+
+11    drink             avg drinks per week - *Large number at zero and few a 1 and 2*
+
+12      lbw             =1 if bwght <= 2000 - *Can be used to filter out the very low birthweights*
+
+13     vlbw             =1 if bwght <= 1500 - *same as lbw but less restrictive*
+
+14     male                 =1 if baby male - *51% male*
+```{r} 
+mean(data$male)
+```
+
+15    mwhte              =1 if mother white - *88.6% of mothers white*
+
+```{r} 
+mean(data$mwhte)
+```
+
+16    mblck              =1 if mother black *5.9% of mothers black*
+
+```{r} 
+mean(data$mblck)
+```
+
+17     moth           =1 if mother is other *5.4% of mothers other*
+
+```{r} 
+mean(data$moth)
+```
+
+18    fwhte              =1 if father white *88.9% of fathers white*
+
+```{r} 
+mean(data$fwhte)
+```
+
+19    fblck              =1 if father black *5.8 of fathers black*
+
+```{r} 
+mean(data$fblck)
+```
+
+20     foth           =1 if father is other *5.1% of fathers other*
+
+```{r} 
+mean(data$foth)
+```
+
+21   lbwght                      log(bwght)
+22   magesq                          mage^2
+23  npvissq                         npvis^2*
+
+#Number of NAs for variables
+
+```{r}
+apply(!is.na(data) , MARGIN= 2, mean )
+```
+
+*Note the variables with the most NA values (cigs, drink) may introduce bias into our model as the people who did not choose to respond may be to embarrassed to answer*
+
+#Scatterplot Matrix
+```{r}
+scatterplotMatrix(~ bwght + omaps + fmaps + mage + fage + meduc + feduc, data=data)
+```
+
+
+#Corr Plot
+```{r}
+data_corr <- cor(data, use="complete.obs")
+corrplot(data_corr)
+```
+
+*variables highly correlated*
+*ages and education for mothers and correlated with the age and education of fathers*
+*race of mothers is correlated with race of father*
+*slight negative correlation between cigs and education of mother*
+*apgar scores correlated with eachother as expected*
+
+#Corr Plot
+```{r}
+data_corr2 <- cor(data[,(1:11)], use="complete.obs")
+corrplot(data_corr2)
+```
+
+
+#Prenadal care vs apgar
+
+```{r}
+
+qplot(monpre, fmaps, data=data) + geom_jitter()
+qplot(monpre, omaps, data=data) + geom_jitter()
+
+qplot(npvis, fmaps, data=data) + geom_jitter()
+
+qplot(npvis, omaps, data=data) + geom_jitter()
+
+qplot(monpre, npvis, data=data) + geom_jitter()
+```
+
+*Some personal observations about these variables: If a mother has a lot of prenadal visits it could point to an unhealthy pregnancy. If a mother has zero prenadal visits it could point to an unhealthy lifestyle.*
+
+
+- What transformations to apply to variables and what new variables should be created.
+
+- What variables should be included in each model
+
+- Whether model assumptions are met
+
+3. A minimum of three model specifications.  In particular, you should include
+
+- One model with only the explanatory variables of key interest.
+
+- One model that includes only covariates that you believe increase the accuracy of your results without introducing bias.
+
+- One model that includes the previous covariates, but also covariates that may be problematic for one reason or another.
+
+4. For your first model, a detailed assessment of the 6 CLM assumptions.  For additional models, you should check all assumptions, but only highlight major differences from your first model in your report.
+
+5. A well-formatted regression table summarizing your model results.  Make sure that standard errors presented in this table are valid.  Also be sure to comment on both statistical and practical significance.
+
+6. A discussion of whether your results can be interpretted causally.  In particular, include a discussion of what variables are not included in your analysis and the likely direction of omitted variable bias.  Also include a discussion of which included variables may bias your results by absorbing some of the causal effect of prenatal care.
+
+7. A brief conclusion with a few high-level takeaways.
+
+
+Please limit all submissions to 30 pages.  Be sure to turn in both your pdf report and also your source code.
