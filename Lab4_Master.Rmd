@@ -9,6 +9,7 @@ output: pdf_document
 
 This will be the document for lab 4
 
+<<<<<<< HEAD
 # Setup
 ```{r}
 load('bwght_w203.RData')
@@ -48,3 +49,8 @@ library(corrplot)
 # Causal Inference
 
 # Conclusion
+=======
+```{r}
+load('bwght_w203.RData')
+```
+>>>>>>> e0d8ccfe6b21f24a2f57344e81b06e3e6dae495d
